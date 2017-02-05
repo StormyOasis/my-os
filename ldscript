@@ -1,0 +1,61 @@
+/* Linker Script */
+
+OUTPUT_FORMAT("binary");
+
+ENTRY(entry_point);
+
+kernel_addr = 0x10000;
+
+SECTIONS
+{	
+	. = kernel_addr; 	 	
+  	.text : AT (kernel_addr)
+	{ 	 
+		scode = kernel_addr;		
+		stext = .;	
+		*(.text)
+		etext = .;
+	}
+	
+  	.rodata : AT (kernel_addr + (srodata - stext))
+  	{
+   		 srodata = .;
+    		*(.rodata.*)
+   		 erodata = .;
+  	}
+
+	.data : AT (kernel_addr + (sdata - stext))
+	{ 			
+    		sdata = .;
+    		*(.data)
+    		edata = .;
+	}
+	
+  	.bss : AT (kernel_addr + (sbss - stext))
+	{ 	
+	    sbss = .;
+		. = ALIGN(4096);
+		page_dir = .;
+		. += 4096;
+		
+		. = ALIGN(4096);		
+		page_table = .;
+		. += 4096;
+		
+		. = ALIGN(4096);		
+		page_stack_init = .;
+		. += 16384;	
+		
+		. = ALIGN(4096); 
+		static_tss_cache = .; 
+		. += 512;
+				
+		
+		/*TSS_CACHE_SIZE or 128 * 4 */		
+		*(COMMON)		
+		*(.bss) 
+		ebss = .;
+	}
+	
+	end = .; _end = . ;
+}
